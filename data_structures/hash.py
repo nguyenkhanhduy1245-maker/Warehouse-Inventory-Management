@@ -3,10 +3,11 @@ Binary Search Tree for Inventory Management.
 Batches are organized by expiry_date in BST (FEFO - First Expired First Out).
 Each node can store multiple batches with same expiry_date.
 """
+from copy import copy
 
 class Node:
     def __init__(self, batch):
-        self.batch = batch
+        self.batches = [batch]
         self.left = None
         self.right = None
         self.height = 1
@@ -14,34 +15,39 @@ class Node:
 class InventoryBST:
     def __init__(self):
         self.root = None
+        self.products = {}
 
     def insert(self, batch):
         """Insert batch into BST sorted by expiry_date"""
         self.root = self._insert_recursive(self.root, batch)
+        
+        product_id = batch.product_id
+        if product_id not in self.products:
+            self.products[product_id] = {'name': batch.name, 'batches': [], 'total_qty': 0}
+        self.products[product_id]['batches'].append(batch)
+        self.products[product_id]['total_qty'] += batch.quantity
 
     def _insert_recursive(self, node, batch):
         if node is None:
             return Node(batch)
         
         # So sánh theo expiry_date (FEFO)
-        if batch.expiry_date < node.batch.expiry_date:
+        if batch.expiry_date < node.batches[0].expiry_date:
             node.left = self._insert_recursive(node.left, batch)
-        elif batch.expiry_date > node.batch.expiry_date:
+        elif batch.expiry_date > node.batches[0].expiry_date:
             node.right = self._insert_recursive(node.right, batch)
         else:
-            # Cùng expiry_date - thêm vào node hiện tại (tạo linked list)
-            # Tạo node mới và link nó
-            new_node = Node(batch)
-            new_node.right = node.right
-            node.right = new_node
+            # Cùng expiry_date - thêm vào node hiện tại
+            node.batches.append(batch)
         
         return node
 
     def search(self, product_id):
-        """Search all batches by product_id"""
-        batches = []
-        self._search_recursive(self.root, product_id, batches)
-        
+        """Search all batches by product_id using hash map for O(1) lookup"""
+        if product_id not in self.products:
+            return None
+            
+        batches = [b for b in self.products[product_id]['batches'] if b.quantity > 0]
         if not batches:
             return None
 
@@ -64,19 +70,7 @@ class InventoryBST:
                 }
 
         total_qty = sum(b.quantity for b in batches)
-        return ProductView(product_id, batches[0].name, total_qty, batches)
-
-    def _search_recursive(self, node, product_id, result):
-        """In-order traversal to find all batches by product_id"""
-        if node is None:
-            return
-        
-        self._search_recursive(node.left, product_id, result)
-        
-        if node.batch.product_id == product_id:
-            result.append(node.batch)
-        
-        self._search_recursive(node.right, product_id, result)
+        return ProductView(product_id, self.products[product_id]['name'], total_qty, batches)
 
     def reduce_batch_quantity(self, batch, qty):
         """Giảm số lượng batch"""
@@ -87,20 +81,20 @@ class InventoryBST:
         if node is None:
             return False
         
-        # Tìm node chứa batch (so sánh by reference hoặc attributes)
-        if node.batch is batch or (node.batch.product_id == batch.product_id and 
-                                   node.batch.expiry_date == batch.expiry_date and
-                                   node.batch.name == batch.name):
-            if node.batch.quantity > qty:
-                node.batch.quantity -= qty
-                return True
-            else:
-                # Xóa batch này (phức tạp hơn - tạm thời mark as removed)
-                node.batch.quantity = 0
-                return True
+        # Tìm node chứa batch
+        if batch.expiry_date == node.batches[0].expiry_date:
+            for b in node.batches:
+                if b is batch or (b.product_id == batch.product_id and b.name == batch.name):
+                    if b.quantity > qty:
+                        b.quantity -= qty
+                        return True
+                    else:
+                        b.quantity = 0
+                        return True
+            return False
         
         # Tìm trong left/right
-        if batch.expiry_date < node.batch.expiry_date:
+        if batch.expiry_date < node.batches[0].expiry_date:
             return self._reduce_recursive(node.left, batch, qty)
         else:
             return self._reduce_recursive(node.right, batch, qty)
@@ -113,24 +107,29 @@ class InventoryBST:
         if node is None:
             return None
         
-        # Tìm node cần xóa
-        if node.batch is batch or (node.batch.product_id == batch.product_id and 
-                                   node.batch.expiry_date == batch.expiry_date):
-            # Node có 2 con
-            if node.left and node.right:
-                min_node = self._find_min(node.right)
-                node.batch = min_node.batch
-                node.right = self._remove_recursive(node.right, min_node.batch)
-            # Node có 1 con
-            elif node.left:
-                return node.left
-            elif node.right:
-                return node.right
-            # Node leaf
-            else:
-                return None
+        if batch.expiry_date == node.batches[0].expiry_date:
+            for i, b in enumerate(node.batches):
+                if b is batch or (b.product_id == batch.product_id and b.expiry_date == batch.expiry_date):
+                    node.batches.pop(i)
+                    break
+                    
+            if not node.batches:
+                # Node có 2 con
+                if node.left and node.right:
+                    min_node = self._find_min(node.right)
+                    node.batches = [copy(min_node.batches[0])]
+                    node.right = self._remove_recursive(node.right, min_node.batches[0])
+                # Node có 1 con
+                elif node.left:
+                    return node.left
+                elif node.right:
+                    return node.right
+                # Node leaf
+                else:
+                    return None
+            return node
         
-        if batch.expiry_date < node.batch.expiry_date:
+        if batch.expiry_date < node.batches[0].expiry_date:
             node.left = self._remove_recursive(node.left, batch)
         else:
             node.right = self._remove_recursive(node.right, batch)
@@ -155,5 +154,5 @@ class InventoryBST:
             return
         
         self._inorder_traversal(node.left, result)
-        result.append(node.batch)
+        result.extend(node.batches)
         self._inorder_traversal(node.right, result)

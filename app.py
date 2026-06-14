@@ -9,8 +9,8 @@ inv_service = InventoryService()
 report_service = ReportService(inv_service)
 
 # Nạp dữ liệu mẫu ban đầu
-inv_service.import_product("P001", "Sữa tươi Vinamilk", 100, "2026-06-01")
-inv_service.import_product("P002", "Bánh mì gối", 50, "2026-05-20")
+inv_service.import_product("P001", "Sữa tươi Vinamilk", 100, "2026-07-01")
+inv_service.import_product("P002", "Bánh mì gối", 50, "2026-08-20")
 inv_service.import_product("P003", "Nước mắm", 200, "2027-01-01")
 inv_service.import_product("P004", "Thịt bò Kobe", 20, "2026-06-15")
 inv_service.import_product("P005", "Rau cải thìa", 100, "2026-06-10")
@@ -44,9 +44,9 @@ def import_product():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 400
 
-@app.route('/api/inventory/export-fifo', methods=['POST'])
-def export_fifo():
-    result = inv_service.export_fifo()
+@app.route('/api/inventory/export-fefo', methods=['POST'])
+def export_fefo():
+    result = inv_service.export_fefo()
     return jsonify(result)
 
 @app.route('/api/inventory/search/<product_id>', methods=['GET'])
@@ -68,6 +68,11 @@ def undo_action():
 def get_orders():
     orders = inv_service.get_pending_orders()
     return jsonify({"status": "success", "data": orders})
+
+@app.route('/api/orders/count', methods=['GET'])
+def get_orders_count():
+    count = inv_service.get_pending_orders_count()
+    return jsonify({"status": "success", "count": count})
 
 @app.route('/api/orders', methods=['POST'])
 def add_order():

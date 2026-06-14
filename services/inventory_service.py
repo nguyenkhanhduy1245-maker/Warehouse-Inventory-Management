@@ -3,7 +3,7 @@ from copy import copy
 
 from models.product import Product
 from models.transaction import Transaction
-from data_structures.bst import InventoryBST
+from data_structures.hash import InventoryBST
 from data_structures.stack import TransactionStack
 from data_structures.linked_list import ReportLinkedList
 from data_structures.queue import OrderQueue
@@ -17,18 +17,23 @@ class InventoryService:
         self.order_queue = OrderQueue()
 
     def import_product(self, product_id, name, quantity, expiry_date):
+        if quantity <= 0:
+            raise ValueError("Số lượng phải lớn hơn 0")
+            
         product = Product(product_id, name, quantity, expiry_date)
         
         # Thêm vào BST để tra cứu nhanh
         self.bst.insert(product)
         
         # Ghi log giao dịch vào Stack
-        self.undo_stack.push_transaction(Transaction("IMPORT", product_id, quantity))
+        trans = Transaction("IMPORT", product_id, quantity)
+        trans.expiry_date = product.expiry_date
+        self.undo_stack.push_transaction(trans)
         return {"status": "success", "message": f"Đã nhập {quantity} {name} vào kho.", "product_id": product_id}
 
-    def export_fifo(self):
+    def export_fefo(self):
         if self.order_queue.is_empty():
-            return {"status": "error", "message": "Không có đơn hàng nào chờ xuất!"}
+            return {"status": "error", "message": "Không có đơn hàng nào đang trong quá trình xử lí!"}
 
         # Lấy đơn hàng đầu tiên (FIFO)
         order = self.order_queue.dequeue()
@@ -45,7 +50,7 @@ class InventoryService:
         batches_deducted = []
         i = 0
 
-        # Trừ số lượng từ các lô hàng theo thứ tự nhập (FIFO)
+        # Trừ số lượng từ các lô hàng theo thứ tự (FEFO)
         while remaining_qty > 0 and i < len(entry['batches']):
             batch = entry['batches'][i]
             if batch.quantity <= remaining_qty:
@@ -91,6 +96,8 @@ class InventoryService:
     def display_all_products(self):
         # Lấy toàn bộ sản phẩm bằng thuật toán duyệt In-order của BST
         products = self.bst.get_all_products()
+        # Sắp xếp theo mã sản phẩm
+        products.sort(key=lambda p: p.product_id)
         return [p.to_dict() for p in products]
 
     def display_exported_products(self):
@@ -106,6 +113,9 @@ class InventoryService:
         orders = self.order_queue.get_all_orders()
         return [o.to_dict() for o in orders]
 
+    def get_pending_orders_count(self):
+        return self.order_queue.get_size()
+
     def undo_last_action(self):
         # Rút giao dịch cuối cùng ra khỏi Stack
         last_trans = self.undo_stack.undo_last()
@@ -113,14 +123,26 @@ class InventoryService:
             return {"status": "error", "message": "Ngăn xếp Undo trống, không có thao tác nào để hoàn tác!"}
             
         if last_trans.action_type == "IMPORT":
-            # Hoàn tác NHẬP: Trừ số lượng trong BST
-            product = self.bst.search(last_trans.product_id)
-            if product:
-                product.quantity -= last_trans.quantity
+            entry = self.bst.products.get(last_trans.product_id)
+            if entry:
+                entry['total_qty'] -= last_trans.quantity
+                
+                # Tìm và xoá batch tương ứng khỏi list batches
+                for i in range(len(entry['batches'])-1, -1, -1):
+                    b = entry['batches'][i]
+                    trans_exp = getattr(last_trans, 'expiry_date', None)
+                    if b.product_id == last_trans.product_id and b.quantity == last_trans.quantity:
+                        if trans_exp is None or b.expiry_date == trans_exp:
+                            entry['batches'].pop(i)
+                            break
+                            
+                if entry['total_qty'] == 0:
+                    del self.bst.products[last_trans.product_id]
+                    
                 return {"status": "success", "message": f"Đã hủy lệnh NHẬP. Trừ {last_trans.quantity} SP mã {last_trans.product_id}"}
                 
         elif last_trans.action_type == "EXPORT":
-            # Hoàn tác XUẤT FIFO: 
+            # Hoàn tác XUẤT FEFO: 
             # 1. Khôi phục lại số lượng cho các lô hàng đã bị trừ
             entry = self.bst.products.get(last_trans.product_id)
             if not entry:

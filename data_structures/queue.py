@@ -21,3 +21,7 @@ class OrderQueue:
     def get_all_orders(self):
         """Trả về toàn bộ danh sách đơn hàng (chỉ để hiển thị)"""
         return list(self.queue)
+
+    def get_size(self):
+        """Trả về tổng số lượng đơn hàng đang chờ"""
+        return len(self.queue)

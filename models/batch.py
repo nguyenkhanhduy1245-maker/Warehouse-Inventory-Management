@@ -13,3 +13,14 @@ class Batch:
 
     def __str__(self):
         return f"[{self.product_id}] {self.name} - SL: {self.quantity} - HSD: {self.expiry_date.strftime('%Y-%m-%d')}"
+
+    def to_dict(self):
+        data = {
+            "product_id": self.product_id,
+            "name": self.name,
+            "quantity": self.quantity,
+            "expiry_date": self.expiry_date.strftime('%Y-%m-%d')
+        }
+        if hasattr(self, 'exported_at'):
+            data['exported_at'] = self.exported_at.strftime('%Y-%m-%d %H:%M:%S')
+        return data

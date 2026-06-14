@@ -17,7 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
             viewTitle.textContent = item.querySelector('span').textContent;
 
             // Trigger data load if needed
-            if (targetView === 'dashboard') loadInventory();
+            if (targetView === 'dashboard') {
+                loadInventory();
+                loadOrders();
+            }
             if (targetView === 'report') loadReport();
             if (targetView === 'exported') loadExported();
             if (targetView === 'orders') loadOrders();
@@ -230,26 +233,38 @@ document.addEventListener('DOMContentLoaded', () => {
             const data = await res.json();
 
             const tbody = document.querySelector('#orders-table tbody');
-            tbody.innerHTML = '';
+            const dashTbody = document.querySelector('#dashboard-orders-table tbody');
+            
+            if (tbody) tbody.innerHTML = '';
+            if (dashTbody) dashTbody.innerHTML = '';
 
             if (data.data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center">Hàng đợi rỗng. Không có đơn hàng nào chờ xử lý.</td></tr>';
-                document.getElementById('total-orders').textContent = '0';
+                const emptyRow = '<tr><td colspan="4" style="text-align:center">Hàng đợi rỗng. Không có đơn hàng nào chờ xử lý.</td></tr>';
+                if (tbody) tbody.innerHTML = emptyRow;
+                if (dashTbody) dashTbody.innerHTML = emptyRow;
+                
+                if (document.getElementById('total-orders')) document.getElementById('total-orders').textContent = '0';
+                if (document.getElementById('dashboard-total-orders')) document.getElementById('dashboard-total-orders').textContent = '0';
                 return;
             }
 
+            let html = '';
             data.data.forEach(item => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><strong>${item.order_id}</strong></td>
-                    <td>${item.customer_name}</td>
-                    <td>${item.product_id}</td>
-                    <td>${item.quantity}</td>
-                    <td><span class="badge badge-warning">${item.status}</span></td>
+                html += `
+                    <tr>
+                        <td>${item.customer_name}</td>
+                        <td>${item.product_id}</td>
+                        <td>${item.quantity}</td>
+                        <td><span class="badge badge-warning">${item.status}</span></td>
+                    </tr>
                 `;
-                tbody.appendChild(tr);
             });
-            document.getElementById('total-orders').textContent = data.data.length;
+            
+            if (tbody) tbody.innerHTML = html;
+            if (dashTbody) dashTbody.innerHTML = html;
+            
+            if (document.getElementById('total-orders')) document.getElementById('total-orders').textContent = data.data.length;
+            if (document.getElementById('dashboard-total-orders')) document.getElementById('dashboard-total-orders').textContent = data.data.length;
         } catch (error) {
             showToast('Lỗi khi tải danh sách đơn hàng', 'error');
         }
@@ -258,11 +273,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (document.getElementById('btn-refresh-orders')) {
         document.getElementById('btn-refresh-orders').addEventListener('click', loadOrders);
     }
+    if (document.getElementById('btn-refresh-dashboard-orders')) {
+        document.getElementById('btn-refresh-dashboard-orders').addEventListener('click', loadOrders);
+    }
 
     // 7. Quick Actions (FIFO & Undo)
     document.getElementById('btn-export-fifo').addEventListener('click', async () => {
         try {
-            const res = await fetch(`${API_BASE}/export-fifo`, { method: 'POST' });
+            const res = await fetch(`${API_BASE}/export-fefo`, { method: 'POST' });
             const data = await res.json();
             
             if (data.status === 'success') {
@@ -295,4 +313,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Init Load
     loadInventory();
+    loadOrders();
 });

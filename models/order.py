@@ -4,7 +4,7 @@ class Order:
         self.customer_name = customer_name
         self.product_id = product_id
         self.quantity = quantity
-        self.status = "pending"  # Trạng thái: pending (chờ xử lý), processed (đã xử lý)
+        self.status = "Đang xử lý"  # Trạng thái: Đang xử lý, Đã xử lý
 
     def to_dict(self):
         return {

@@ -39,7 +39,7 @@
                 </button>
                 <button class="nav-item" data-view="orders">
                     <i class="fa-solid fa-cart-flatbed"></i>
-                    <span>Đơn Hàng Chờ Xuất</span>
+                    <span>Đơn Hàng Đang Xử Lý</span>
                 </button>
                 <button class="nav-item" data-view="exported">
                     <i class="fa-solid fa-truck-ramp-box"></i>
@@ -95,6 +95,32 @@
                         </div>
                         <div class="summary-footer">
                             <span>Tổng mặt hàng: <strong id="total-items">0</strong></span>
+                        </div>
+                    </div>
+
+                    <!-- DANH SÁCH ĐƠN HÀNG CHỜ (QUEUE) TRÊN DASHBOARD -->
+                    <div class="card glass-panel flex-card" style="margin-top: 1.5rem;">
+                        <div class="card-header">
+                            <h3>Đơn hàng chờ xử lý (Queue)</h3>
+                            <button id="btn-refresh-dashboard-orders" class="btn-icon"><i class="fa-solid fa-rotate-right"></i></button>
+                        </div>
+                        <div class="table-container">
+                            <table id="dashboard-orders-table">
+                                <thead>
+                                    <tr>
+                                        <th>Khách Hàng</th>
+                                        <th>Mã SP</th>
+                                        <th>Số Lượng</th>
+                                        <th>Trạng Thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data rendered by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="summary-footer">
+                            <span>Tổng số đơn chờ: <strong id="dashboard-total-orders">0</strong></span>
                         </div>
                     </div>
                 </section>
@@ -207,14 +233,13 @@
                 <section id="view-orders" class="view-section">
                     <div class="card glass-panel flex-card">
                         <div class="card-header">
-                            <h3>Danh sách Khách Đặt Hàng (Queue)</h3>
+                            <h3>Danh sách Đơn Hàng trong Queue</h3>
                             <button id="btn-refresh-orders" class="btn-icon"><i class="fa-solid fa-rotate-right"></i></button>
                         </div>
                         <div class="table-container">
                             <table id="orders-table">
                                 <thead>
                                     <tr>
-                                        <th>Mã Đơn</th>
                                         <th>Tên Khách Hàng</th>
                                         <th>Mã SP Cần Mua</th>
                                         <th>Số Lượng</th>

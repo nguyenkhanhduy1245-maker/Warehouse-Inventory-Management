@@ -28,7 +28,8 @@ def main():
         print("[5] Hiển thị TẤT CẢ sản phẩm")
         print("[6] Hoàn tác thao tác gần nhất (Undo)")
         print("[7] Hiển thị hàng đã xuất khỏi kho")
-        print("[8] Hiển thị đơn hàng chờ xuất (Khách đặt)")
+        print("[8] Hiển thị đơn hàng đang xử lý (Khách đặt)")
+        print("[9] Xem tổng số đơn chờ")
         print("[0] Thoát hệ thống")
         print("="*45)
         
@@ -85,7 +86,7 @@ def main():
                         print(f"  [{i}] {item['product_id']} | {item['name']} | SL: {item['quantity']} | HSD: {item['expiry_date']} | Xuất lúc: {exported_at}")
 
             case '8':
-                print("\n--- ĐƠN HÀNG CHỜ XUẤT (QUEUE) ---")
+                print("\n--- ĐƠN HÀNG ĐANG XỬ LÝ (QUEUE) ---")
                 orders = inv_service.get_pending_orders()
                 if not orders:
                     print("Hàng đợi rỗng. Chưa có đơn hàng nào cần xử lý.")
@@ -93,12 +94,17 @@ def main():
                     for i, o in enumerate(orders, 1):
                         print(f"  [{i}] Mã Đơn: {o['order_id']} | Khách: {o['customer_name']} | Mã SP: {o['product_id']} | SL: {o['quantity']} | Trạng thái: {o['status']}")
 
+            case '9':
+                print("\n--- TỔNG SỐ ĐƠN CHỜ ---")
+                count = inv_service.get_pending_orders_count()
+                print(f"Hiện đang có {count} đơn hàng chờ xử lý trong hàng đợi.")
+
             case '0':
                 print("\nĐang đóng hệ thống. Tạm biệt cậu!")
                 break
 
             case _:
-                print("\n[LỖI] Lựa chọn không hợp lệ, vui lòng bấm từ 0 đến 8!")
+                print("\n[LỖI] Lựa chọn không hợp lệ, vui lòng bấm từ 0 đến 9!")
 
 if __name__ == "__main__":
     main()
