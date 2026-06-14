@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Inventory Management</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar glass-panel">
+            <div class="logo-container">
+                <div class="logo-icon"><i class="fa-solid fa-boxes-stacked"></i></div>
+                <h1 class="logo-text">WareFlow</h1>
+            </div>
+            
+            <nav class="nav-menu">
+                <button class="nav-item active" data-view="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Tổng quan (Kho)</span>
+                </button>
+                <button class="nav-item" data-view="import">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                    <span>Nhập Hàng</span>
+                </button>
+                <button class="nav-item" data-view="search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span>Tra Cứu</span>
+                </button>
+                <button class="nav-item" data-view="report">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span>Báo Cáo Cận Date</span>
+                </button>
+                <button class="nav-item" data-view="orders">
+                    <i class="fa-solid fa-cart-flatbed"></i>
+                    <span>Đơn Hàng Chờ Xuất</span>
+                </button>
+                <button class="nav-item" data-view="exported">
+                    <i class="fa-solid fa-truck-ramp-box"></i>
+                    <span>Hàng Đã Xuất</span>
+                </button>
+            </nav>
+
+            <div class="quick-actions">
+                <p class="section-title">Hành Động Nhanh</p>
+                <button id="btn-export-fifo" class="action-btn btn-primary">
+                    <i class="fa-solid fa-box-open"></i> Xuất FIFO (Đơn hàng)
+                </button>
+                <button id="btn-undo" class="action-btn btn-secondary">
+                    <i class="fa-solid fa-rotate-left"></i> Hoàn Tác
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="topbar glass-panel">
+                <div class="page-title">
+                    <h2 id="current-view-title">Tổng quan (Kho)</h2>
+                </div>
+                <div class="user-profile">
+                    <div class="avatar"><i class="fa-solid fa-user"></i></div>
+                    <span>Admin</span>
+                </div>
+            </header>
+
+            <div class="content-area">
+                <!-- VIEW: Dashboard / Kho -->
+                <section id="view-dashboard" class="view-section active">
+                    <div class="card glass-panel flex-card">
+                        <div class="card-header">
+                            <h3>Danh sách Sản phẩm</h3>
+                            <button id="btn-refresh" class="btn-icon"><i class="fa-solid fa-rotate-right"></i></button>
+                        </div>
+                        <div class="table-container">
+                            <table id="inventory-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã SP</th>
+                                        <th>Tên Sản phẩm</th>
+                                        <th>Số lượng</th>
+                                        <th>Hạn sử dụng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data rendered by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="summary-footer">
+                            <span>Tổng mặt hàng: <strong id="total-items">0</strong></span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Import -->
+                <section id="view-import" class="view-section">
+                    <div class="card glass-panel max-w-md">
+                        <div class="card-header">
+                            <h3>Nhập hàng mới</h3>
+                        </div>
+                        <form id="form-import" class="modern-form">
+                            <div class="form-group">
+                                <label for="imp-id">Mã Sản phẩm</label>
+                                <input type="text" id="imp-id" required placeholder="VD: P004">
+                            </div>
+                            <div class="form-group">
+                                <label for="imp-name">Tên Sản phẩm</label>
+                                <input type="text" id="imp-name" required placeholder="VD: Sữa Chua">
+                            </div>
+                            <div class="form-group">
+                                <label for="imp-qty">Số lượng</label>
+                                <input type="number" id="imp-qty" required min="1" placeholder="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="imp-date">Hạn sử dụng</label>
+                                <input type="date" id="imp-date" required>
+                            </div>
+                            <button type="submit" class="btn-submit">Nhập Vào Kho</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- VIEW: Search -->
+                <section id="view-search" class="view-section">
+                    <div class="card glass-panel max-w-md">
+                        <div class="card-header">
+                            <h3>Tra cứu sản phẩm</h3>
+                        </div>
+                        <div class="search-bar-container">
+                            <input type="text" id="search-input" placeholder="Nhập mã sản phẩm cần tìm...">
+                            <button id="btn-search-submit" class="btn-icon-primary"><i class="fa-solid fa-search"></i></button>
+                        </div>
+                        
+                        <div id="search-result-container" class="result-box hidden">
+                            <!-- Kết quả hiển thị ở đây -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Report -->
+                <section id="view-report" class="view-section">
+                    <div class="card glass-panel">
+                        <div class="card-header flex-between">
+                            <h3>Báo cáo Cận Date</h3>
+                            <div class="filter-group">
+                                <label for="report-days">Cảnh báo dưới (ngày):</label>
+                                <input type="number" id="report-days" value="30" min="1" max="365" class="small-input">
+                                <button id="btn-gen-report" class="btn-small">Xem Báo cáo</button>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table id="report-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã SP</th>
+                                        <th>Tên Sản phẩm</th>
+                                        <th>Số lượng</th>
+                                        <th>Hạn sử dụng</th>
+                                        <th>Trạng thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data rendered by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Exported -->
+                <section id="view-exported" class="view-section">
+                    <div class="card glass-panel flex-card">
+                        <div class="card-header">
+                            <h3>Kiện hàng đã xuất khỏi kho</h3>
+                            <button id="btn-refresh-exported" class="btn-icon"><i class="fa-solid fa-rotate-right"></i></button>
+                        </div>
+                        <div class="table-container">
+                            <table id="exported-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã SP</th>
+                                        <th>Tên Sản phẩm</th>
+                                        <th>Số lượng xuất</th>
+                                        <th>Hạn sử dụng</th>
+                                        <th>Thời gian xuất</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data rendered by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="summary-footer">
+                            <span>Tổng kiện đã xuất: <strong id="total-exported">0</strong></span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- VIEW: Orders -->
+                <section id="view-orders" class="view-section">
+                    <div class="card glass-panel flex-card">
+                        <div class="card-header">
+                            <h3>Danh sách Khách Đặt Hàng (Queue)</h3>
+                            <button id="btn-refresh-orders" class="btn-icon"><i class="fa-solid fa-rotate-right"></i></button>
+                        </div>
+                        <div class="table-container">
+                            <table id="orders-table">
+                                <thead>
+                                    <tr>
+                                        <th>Mã Đơn</th>
+                                        <th>Tên Khách Hàng</th>
+                                        <th>Mã SP Cần Mua</th>
+                                        <th>Số Lượng</th>
+                                        <th>Trạng Thái</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data rendered by JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="summary-footer">
+                            <span>Tổng số đơn chờ: <strong id="total-orders">0</strong></span>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

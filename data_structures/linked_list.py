@@ -21,3 +21,18 @@ class ReportLinkedList:
         while current:
             print(current.product)
             current = current.next
+
+    def to_list(self):
+        result = []
+        current = self.head
+        while current:
+            result.append(current.product.to_dict())
+            current = current.next
+        return result
+
+    def pop_head(self):
+        if not self.head:
+            return None
+        node = self.head
+        self.head = self.head.next
+        return node.product

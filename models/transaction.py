@@ -9,3 +9,11 @@ class Transaction:
 
     def __str__(self):
         return f"{self.action_type} | {self.product_id} | SL: {self.quantity} | {self.timestamp.strftime('%H:%M:%S')}"
+
+    def to_dict(self):
+        return {
+            "action_type": self.action_type,
+            "product_id": self.product_id,
+            "quantity": self.quantity,
+            "timestamp": self.timestamp.strftime('%H:%M:%S')
+        }

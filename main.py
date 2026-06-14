@@ -13,6 +13,8 @@ def main():
     inv_service.import_product("P001", "Sữa tươi Vinamilk", 100, "2026-06-01")
     inv_service.import_product("P002", "Bánh mì gối", 50, "2026-05-20")
     inv_service.import_product("P003", "Nước mắm", 200, "2027-01-01")
+    inv_service.add_order("ORD001", "Nguyễn Văn A", "P001", 10)
+    inv_service.add_order("ORD002", "Trần Thị B", "P002", 5)
 
     # Vòng lặp menu chính
     while True:
@@ -24,11 +26,13 @@ def main():
         print("[3] Xem báo cáo cảnh báo cận date")
         print("[4] Xuất hàng tự động (FEFO)")
         print("[5] Hiển thị TẤT CẢ sản phẩm")
-        print("[6] Hoàn tác thao tác gần nhất (Undo)") # <-- Gắn nút bấm Undo vào đây
+        print("[6] Hoàn tác thao tác gần nhất (Undo)")
+        print("[7] Hiển thị hàng đã xuất khỏi kho")
+        print("[8] Hiển thị đơn hàng chờ xuất (Khách đặt)")
         print("[0] Thoát hệ thống")
         print("="*45)
         
-        choice = input("Mời cậu chọn tác vụ (0-6): ").strip()
+        choice = input("Mời cậu chọn tác vụ (0-8): ").strip()
         
         match choice:
             case '1':
@@ -67,14 +71,34 @@ def main():
 
             case '6':
                 print("\n--- HOÀN TÁC (UNDO) ---")
-                inv_service.undo_last_action()
+                result = inv_service.undo_last_action()
+                print(result.get("message", result))
+
+            case '7':
+                print("\n--- HÀNG ĐÃ XUẤT KHỎI KHO ---")
+                exported = inv_service.display_exported_products()
+                if not exported:
+                    print("Chưa có kiện hàng nào được xuất khỏi kho.")
+                else:
+                    for i, item in enumerate(exported, 1):
+                        exported_at = item.get('exported_at', '—')
+                        print(f"  [{i}] {item['product_id']} | {item['name']} | SL: {item['quantity']} | HSD: {item['expiry_date']} | Xuất lúc: {exported_at}")
+
+            case '8':
+                print("\n--- ĐƠN HÀNG CHỜ XUẤT (QUEUE) ---")
+                orders = inv_service.get_pending_orders()
+                if not orders:
+                    print("Hàng đợi rỗng. Chưa có đơn hàng nào cần xử lý.")
+                else:
+                    for i, o in enumerate(orders, 1):
+                        print(f"  [{i}] Mã Đơn: {o['order_id']} | Khách: {o['customer_name']} | Mã SP: {o['product_id']} | SL: {o['quantity']} | Trạng thái: {o['status']}")
 
             case '0':
                 print("\nĐang đóng hệ thống. Tạm biệt cậu!")
                 break
 
             case _:
-                print("\n[LỖI] Lựa chọn không hợp lệ, vui lòng bấm từ 0 đến 6!")
+                print("\n[LỖI] Lựa chọn không hợp lệ, vui lòng bấm từ 0 đến 8!")
 
 if __name__ == "__main__":
     main()
